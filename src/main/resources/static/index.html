@@ -315,7 +315,7 @@
         <p><span class="status-dot"></span>Java Spring Boot Backend + HTML Frontend</p>
     </div>
     <div style="font-size: 0.85rem; color: #64748b;">
-        API: <code style="color: #60a5fa;">localhost:8080</code>
+        API: <code style="color: #60a5fa;">localhost:8082</code>
     </div>
 </header>
 
@@ -343,14 +343,14 @@
 
     <!-- Search -->
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Student naam se dhundho..." oninput="searchStudents()">
-        <button class="btn btn-success" onclick="openAddModal()">+ Naya Student</button>
+        <input type="text" id="searchInput" placeholder="Search Student Name..." oninput="searchStudents()">
+        <button class="btn btn-success" onclick="openAddModal()">+ New Student</button>
     </div>
 
     <!-- Table -->
     <div class="table-wrapper">
         <div class="table-header">
-            <h2>Students ki List</h2>
+            <h2>List of Student </h2>
             <button class="btn btn-primary" onclick="loadStudents()" style="padding: 8px 14px; font-size: 0.8rem;">🔄 Refresh</button>
         </div>
 
@@ -361,7 +361,7 @@
                     <th>Naam</th>
                     <th>Email</th>
                     <th>Course</th>
-                    <th>Umar</th>
+                    <th>Age</th>
                     <th>Phone</th>
                     <th>Actions</th>
                 </tr>
@@ -376,11 +376,11 @@
 <!-- Add/Edit Modal -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-        <h2 id="modalTitle">Naya Student Add Karo</h2>
+        <h2 id="modalTitle">Add New Student</h2>
         <input type="hidden" id="studentId">
 
         <div class="form-group">
-            <label>Poora Naam *</label>
+            <label>Full Name *</label>
             <input type="text" id="sName" placeholder="Jaise: Ahmed Khan">
         </div>
 
@@ -402,7 +402,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Umar *</label>
+                <label>Age *</label>
                 <input type="number" id="sAge" placeholder="20" min="15" max="50">
             </div>
         </div>
@@ -413,8 +413,8 @@
         </div>
 
         <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeModal()">Ruk Jao</button>
-            <button class="btn btn-success" onclick="saveStudent()">Save Karo ✓</button>
+            <button class="btn-cancel" onclick="closeModal()">Stop</button>
+            <button class="btn btn-success" onclick="saveStudent()">Save</button>
         </div>
     </div>
 </div>
@@ -423,7 +423,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    const API = 'http://localhost:8080/api/students';
+    const API = 'http://localhost:8082/api/students';
     let allStudents = [];
 
     // Badge color by course
@@ -439,7 +439,7 @@
     async function loadStudents() {
         try {
             const res = await fetch(API);
-            if (!res.ok) throw new Error('Server se data nahi aaya');
+            if (!res.ok) throw new Error('Data not comming from Server');
             allStudents = await res.json();
             renderTable(allStudents);
             updateStats(allStudents);
@@ -447,10 +447,10 @@
             document.getElementById('studentTableBody').innerHTML = `
                 <tr><td colspan="7" class="empty-state">
                     <div class="icon">⚠️</div>
-                    <div>Backend se connect nahi ho raha!</div>
+                    <div>Did not connet with backend!</div>
                     <div style="font-size:0.8rem; margin-top:8px;">Java server run karo: <code>mvn spring-boot:run</code></div>
                 </td></tr>`;
-            showToast('Backend se connection fail! Server chalu karo.', 'error');
+            showToast('Failed backend connetion! Start server.', 'error');
         }
     }
 
@@ -554,28 +554,28 @@
                 body: JSON.stringify(data)
             });
 
-            if (!res.ok) throw new Error('Save nahi hua');
+            if (!res.ok) throw new Error('Not Save');
 
             closeModal();
             await loadStudents();
-            showToast(id ? 'Student update ho gaya! ✓' : 'Naya student add ho gaya! ✓');
+            showToast(id ? 'Student updated! ✓' : 'New Student added! ✓');
         } catch (err) {
-            showToast('Kuch masla hua, dobara try karo', 'error');
+            showToast('Something error, try again', 'error');
         }
     }
 
     // Student delete
     async function deleteStudent(id) {
         const student = allStudents.find(s => s.id === id);
-        if (!confirm(`"${student.name}" ko delete karna chahte ho?`)) return;
+        if (!confirm(`"${student.name}" are you sure to delete?`)) return;
 
         try {
             const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error();
             await loadStudents();
-            showToast('Student delete ho gaya!');
+            showToast('Student deleted!');
         } catch {
-            showToast('Delete nahi hua', 'error');
+            showToast('Student not deleted', 'error');
         }
     }
 
