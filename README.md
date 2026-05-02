@@ -1,73 +1,92 @@
-# 🎓 Student Management System
+#  Student Management System
+
 ## Java Spring Boot + HTML Frontend
 
 ---
 
-## Project Structure (Kya kya hai)
+## Project Structure
 
 ```
 student-management/
-├── pom.xml                          ← Maven dependencies
-├── frontend/
-│   └── index.html                   ← Frontend (browser mein kholo)
-└── src/main/java/com/student/
-    ├── StudentManagementApplication.java  ← Main class
-    ├── DataInitializer.java               ← Sample data
-    ├── model/
-    │   └── Student.java                   ← Database table
-    ├── repository/
-    │   └── StudentRepository.java         ← Database queries
-    ├── service/
-    │   └── StudentService.java            ← Business logic
-    └── controller/
-        └── StudentController.java         ← REST API endpoints
+├── pom.xml
+└── src/
+    └── main/
+        ├── java/com/student/
+        │   ├── StudentManagementApplication.java
+        │   ├── DataInitializer.java
+        │   ├── model/Student.java
+        │   ├── repository/StudentRepository.java
+        │   ├── service/StudentService.java
+        │   └── controller/StudentController.java
+        │
+        └── resources/
+            ├── static/
+            │   └── index.html
+            └── application.properties
 ```
 
 ---
 
-## Chalane Ka Tarika (How to Run)
+## How to Run
 
-### Step 1 — Backend Start Karo
+### Step 1 — Start Backend
+
 ```bash
 cd student-management
 mvn spring-boot:run
 ```
-Server `http://localhost:8080` par chalu hoga ✅
 
-### Step 2 — Frontend Kholo
-`frontend/index.html` ko browser mein open karo
-(Double click ya drag karke browser mein daalo)
+Server `http://localhost:8082` par chalega
+(ensure `application.properties` me `server.port=8082` set ho)
+
+---
+
+### Step 2 — Open Frontend
+
+Open in browser:
+
+```
+http://localhost:8082
+```
 
 ---
 
 ## API Endpoints (REST API)
 
-| Method | URL | Kya karta hai |
-|--------|-----|---------------|
-| GET | `/api/students` | Saare students laao |
-| GET | `/api/students/{id}` | Ek student ID se |
-| POST | `/api/students` | Naya student add karo |
-| PUT | `/api/students/{id}` | Student update karo |
-| DELETE | `/api/students/{id}` | Student delete karo |
-| GET | `/api/students/search?name=Ahmed` | Name se search |
-| GET | `/api/students/course/Computer Science` | Course ke students |
+| Method | URL                                     | Description             |
+| ------ | --------------------------------------- | ----------------------- |
+| GET    | `/api/students`                         | Fetch all students      |
+| GET    | `/api/students/{id}`                    | Fetch a student by ID   |
+| POST   | `/api/students`                         | Add a new student       |
+| PUT    | `/api/students/{id}`                    | Update a student        |
+| DELETE | `/api/students/{id}`                    | Delete a student        |
+| GET    | `/api/students/search?name=Ahmed`       | Search students by name |
+| GET    | `/api/students/course/Computer Science` | Get students by course  |
 
 ---
 
 ## H2 Database Console
-Browser mein jaao: `http://localhost:8080/h2-console`
-- JDBC URL: `jdbc:h2:mem:studentdb`
-- Username: `sa`
-- Password: (khaali chhodo)
+
+Go to:
+
+```
+http://localhost:8082/h2-console
+```
+
+* JDBC URL: `jdbc:h2:mem:studentdb`
+* Username: `sa`
+* Password: (leave empty)
 
 ---
 
 ## Features
 
-✅ Student add, edit, delete karo  
-✅ Name/email/course se search  
-✅ Stats dashboard  
-✅ REST API (JSON)  
-✅ In-memory H2 database (setup nahi chahiye)  
-✅ Sample data auto-load  
-Project setup completed 
+* Student add, edit, and delete functionality
+* Search by name, email, and course
+* Stats dashboard available
+* REST API support (JSON)
+* In-memory H2 database (no setup required)
+* Sample data auto-loaded
+
+---
+
