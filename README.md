@@ -70,3 +70,4 @@ Browser mein jaao: `http://localhost:8080/h2-console`
 ✅ REST API (JSON)  
 ✅ In-memory H2 database (setup nahi chahiye)  
 ✅ Sample data auto-load  
+Project setup completed 
