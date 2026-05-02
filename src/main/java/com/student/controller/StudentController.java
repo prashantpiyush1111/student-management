@@ -50,7 +50,7 @@ public class StudentController {
     public ResponseEntity<String> deleteStudent(@PathVariable Long id) {
         try {
             studentService.deleteStudent(id);
-            return ResponseEntity.ok("Student successfully delete ho gaya!");
+            return ResponseEntity.ok("Student deleted successfully!");
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
