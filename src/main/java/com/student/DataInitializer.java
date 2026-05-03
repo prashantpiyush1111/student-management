@@ -13,7 +13,7 @@ public class DataInitializer {
     CommandLineRunner initData(StudentRepository repository) {
         return args -> {
 
-            repository.save(new Student(null, "Ram", "Raam@email.com", "Computer Science", 20, "03001234567"));
+            repository.save(new Student(null, "Ram", "Raaam@email.com", "Computer Science", 20, "03001234567"));
             repository.save(new Student(null, "Radha", "Raadha@email.com", "Software Engineering", 21, "03011234567"));
             repository.save(new Student(null, "Krishna", "Krrishna@email.com", "Computer Science", 22, "03021234567"));
             repository.save(new Student(null, "Sita", "Siita@email.com", "Data Science", 19, "03031234567"));
