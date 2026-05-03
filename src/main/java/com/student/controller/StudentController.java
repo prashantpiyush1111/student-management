@@ -6,12 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "*")  
+@CrossOrigin(origins = "*")
 public class StudentController {
 
     @Autowired
@@ -19,8 +20,7 @@ public class StudentController {
 
     @GetMapping
     public ResponseEntity<List<Student>> getAllStudents() {
-        List<Student> students = studentService.getAllStudents();
-        return ResponseEntity.ok(students);
+        return ResponseEntity.ok(studentService.getAllStudents());
     }
 
     @GetMapping("/{id}")
@@ -47,7 +47,15 @@ public class StudentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteStudent(@PathVariable Long id) {
+    public ResponseEntity<String> deleteStudent(@PathVariable Long id, HttpSession session) {
+
+        String role = (String) session.getAttribute("role");
+
+        if(role == null || !role.equals("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Access Denied! Only ADMIN can delete.");
+        }
+
         try {
             studentService.deleteStudent(id);
             return ResponseEntity.ok("Student deleted successfully!");
@@ -58,13 +66,11 @@ public class StudentController {
 
     @GetMapping("/search")
     public ResponseEntity<List<Student>> searchStudents(@RequestParam String name) {
-        List<Student> students = studentService.searchStudentsByName(name);
-        return ResponseEntity.ok(students);
+        return ResponseEntity.ok(studentService.searchStudentsByName(name));
     }
 
     @GetMapping("/course/{course}")
     public ResponseEntity<List<Student>> getStudentsByCourse(@PathVariable String course) {
-        List<Student> students = studentService.getStudentsByCourse(course);
-        return ResponseEntity.ok(students);
+        return ResponseEntity.ok(studentService.getStudentsByCourse(course));
     }
 }

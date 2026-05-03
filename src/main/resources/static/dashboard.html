@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+
+<h2>Dashboard</h2>
+
+<p id="roleText"></p>
+
+<a href="/logout">Logout</a>
+
+<hr>
+
+<h3>Add Student</h3>
+
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="course" placeholder="Course">
+<button onclick="addStudent()">Add</button>
+
+<hr>
+
+<h3>Student List</h3>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Course</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="studentTable"></tbody>
+</table>
+
+<script>
+
+let userRole = "";
+
+fetch('/getRole')
+    .then(res => res.text())
+    .then(role => {
+        userRole = role;
+        document.getElementById("roleText").innerText = "Role: " + role;
+
+        loadStudents();
+    });
+
+function loadStudents() {
+    fetch('/api/students', {
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem("token")
+        }
+    })
+    .then(res => {
+        if(res.status === 401) {
+            alert("Unauthorized! Please login again");
+            window.location.href = "/login.html";
+            return;
+        }
+        return res.json();
+    })
+    .then(data => {
+
+        let table = document.getElementById("studentTable");
+        table.innerHTML = "";
+
+        data.forEach(s => {
+            let row = "<tr>" +
+                "<td>" + s.id + "</td>" +
+                "<td>" + s.name + "</td>" +
+                "<td>" + s.course + "</td>";
+
+            if(userRole === "ADMIN") {
+                row += "<td><button onclick='deleteStudent(" + s.id + ")'>Delete</button></td>";
+            } else {
+                row += "<td>No Access</td>";
+            }
+
+            row += "</tr>";
+            table.innerHTML += row;
+        });
+    });
+}
+
+
+function addStudent() {
+
+    if(userRole !== "ADMIN") {
+        alert("Only ADMIN can add student!");
+        return;
+    }
+
+    let name = document.getElementById("name").value;
+    let course = document.getElementById("course").value;
+
+    fetch('/api/students', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem("token")
+        },
+        body: JSON.stringify({
+            name: name,
+            course: course
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Student Added!");
+        loadStudents();
+    });
+}
+
+function deleteStudent(id) {
+    fetch('/api/students/' + id, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem("token")
+        }
+    })
+    .then(res => res.text())
+    .then(msg => {
+        alert(msg);
+        loadStudents();
+    });
+}
+
+</script>
+
+</body>
+</html>

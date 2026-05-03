@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login</title>
+</head>
+
+<body>
+
+<h2>Admin Login</h2>
+
+<label>Username:</label><br>
+<input type="text" id="username"><br><br>
+
+<label>Password:</label><br>
+<input type="password" id="password"><br><br>
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<script>
+function login() {
+
+    let username = document.getElementById("username").value;
+    let password = document.getElementById("password").value;
+
+    fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'username=' + username + '&password=' + password
+    })
+    .then(res => res.text())
+    .then(token => {
+
+        if(token === "Invalid Login") {
+            document.getElementById("msg").innerText = "Wrong credentials ";
+            return;
+        }
+
+        localStorage.setItem("token", token);
+
+        window.location.href = "/dashboard";
+    });
+}
+</script>
+
+</body>
+</html>
