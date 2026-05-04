@@ -20,7 +20,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/login.html").permitAll()
 						.requestMatchers("/api/students/**").authenticated().anyRequest().authenticated())
 				.formLogin(
-						form -> form.loginPage("/login.html").defaultSuccessUrl("/dashboard.html", true).permitAll());
+						form -> form.loginPage("/login.html") .loginProcessingUrl("/login") .defaultSuccessUrl("/dashboard.html", true).permitAll());
 
 		return http.build();
 	}
