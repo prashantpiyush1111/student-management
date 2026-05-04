@@ -21,7 +21,7 @@ public class DataInitializer {
 
             System.out.println("Sample data added successfully!");
         	} else {  
-                System.out.println("Data already exists, skipping insert...");  // ⭐ NEW LINE
+                System.out.println("Data already exists, skipping insert...");  
             }
         };
     }
