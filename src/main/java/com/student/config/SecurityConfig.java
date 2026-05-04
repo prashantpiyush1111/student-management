@@ -25,16 +25,20 @@ public class SecurityConfig {
 		return http.build();
 	}
 	
-	@Bean
-	public UserDetailsService userDetailsService() {
-	    PasswordEncoder encoder = new BCryptPasswordEncoder();
+	   @Bean
+	    public PasswordEncoder passwordEncoder() {
+	        return new BCryptPasswordEncoder();
+	    }
+	   
+	   @Bean
+	    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
 
-	    UserDetails admin = User.builder()
-	            .username("admin")
-	            .password(encoder.encode("admin123")) 
-	            .roles("ADMIN")
-	            .build();
+	        UserDetails admin = User.builder()
+	                .username("admin")
+	                .password(encoder.encode("admin123"))
+	                .roles("ADMIN")
+	                .build();
 
-	    return new InMemoryUserDetailsManager(admin);
+	        return new InMemoryUserDetailsManager(admin);
+	    }
 	}
-}
