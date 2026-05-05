@@ -10,35 +10,49 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
 @Configuration
 public class SecurityConfig {
 
-	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+               
+                .requestMatchers("/login.html", "/login", "/css/**", "/js/**").permitAll()
+                
+                .requestMatchers("/api/students/**").authenticated()
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login.html")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/dashboard", true)
+                .failureUrl("/login.html?error=true")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login.html")
+                .permitAll()
+            );
+        return http.build();
+    }
 
-		http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(auth -> auth.requestMatchers("/login", "/login.html").permitAll()
-						.requestMatchers("/api/students/**").authenticated().anyRequest().authenticated())
-				.formLogin(
-						form -> form.loginPage("/login.html") .loginProcessingUrl("/login") .defaultSuccessUrl("/dashboard.html", true).permitAll());
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-		return http.build();
-	}
-	
-	   @Bean
-	    public PasswordEncoder passwordEncoder() {
-	        return new BCryptPasswordEncoder();
-	    }
-	   
-	   @Bean
-	    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-
-	        UserDetails admin = User.builder()
-	                .username("admin")
-	                .password(encoder.encode("admin123"))
-	                .roles("ADMIN")
-	                .build();
-
-	        return new InMemoryUserDetailsManager(admin);
-	    }
-	}
+  
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
+        UserDetails admin = User.builder()
+                .username("admin")
+                .password(encoder.encode("admin123"))
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(admin);
+    }
+}
