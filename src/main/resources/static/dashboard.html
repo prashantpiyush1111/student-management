@@ -1,133 +1,553 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management — Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3a5f, #0f2d4a);
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #2d6a9f;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        header h1 { font-size: 1.6rem; color: #60a5fa; font-weight: 700; }
+        header p { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
+
+        .status-dot {
+            width: 10px; height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .num { font-size: 2rem; font-weight: 700; color: #60a5fa; }
+        .stat-card .label { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+
+        .search-bar { display: flex; gap: 10px; margin-bottom: 24px; }
+
+        .search-bar input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar input:focus { border-color: #60a5fa; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-success:hover { background: #15803d; }
+        .btn-danger { background: #dc2626; color: white; padding: 6px 14px; font-size: 0.8rem; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-warning { background: #d97706; color: white; padding: 6px 14px; font-size: 0.8rem; }
+        .btn-warning:hover { background: #b45309; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .modal h2 { font-size: 1.2rem; color: #60a5fa; margin-bottom: 20px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus { border-color: #60a5fa; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-cancel:hover { background: #334155; }
+
+        .table-wrapper {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .table-header h2 { font-size: 1rem; color: #e2e8f0; }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #0f172a; }
+
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.8rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #1e293b;
+            font-size: 0.9rem;
+        }
+
+        tbody tr { background: #1e293b; transition: background 0.15s; }
+        tbody tr:hover { background: #263347; }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-cs { background: #1e3a5f; color: #60a5fa; }
+        .badge-se { background: #1a2e1a; color: #4ade80; }
+        .badge-ds { background: #2e1a2e; color: #c084fc; }
+        .badge-cy { background: #2e1a1a; color: #f87171; }
+        .badge-default { background: #1e293b; color: #94a3b8; }
+
+        .actions { display: flex; gap: 8px; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #16a34a;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { background: #dc2626; }
+
+        .loading { text-align: center; padding: 40px; color: #64748b; }
+
+        .empty-state { text-align: center; padding: 50px; color: #64748b; }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 10px; }
+
+        .role-badge {
+            background: #1e3a5f;
+            color: #60a5fa;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
 
-<h2>Dashboard</h2>
+<header>
+    <div>
+        <h1>🎓 Student Management System</h1>
+        <p><span class="status-dot"></span>Spring Boot Backend Connected</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <span class="role-badge" id="roleBadge">Loading...</span>
+        <a href="/logout" class="btn btn-danger" style="text-decoration:none; padding: 8px 16px;">🚪 Logout</a>
+    </div>
+</header>
 
-<p id="roleText"></p>
+<div class="container">
 
-<a href="/logout">Logout</a>
+    <div class="stats">
+        <div class="stat-card">
+            <div class="num" id="totalStudents">—</div>
+            <div class="label">Total Students</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="totalCS">—</div>
+            <div class="label">Computer Science</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="totalSE">—</div>
+            <div class="label">Software Eng.</div>
+        </div>
+        <div class="stat-card">
+            <div class="num" id="totalOther">—</div>
+            <div class="label">Other Courses</div>
+        </div>
+    </div>
 
-<hr>
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name, email, course..." oninput="searchStudents()">
+        <button class="btn btn-success" onclick="openAddModal()">+ New Student</button>
+    </div>
 
-<h3>Add Student</h3>
+    <div class="table-wrapper">
+        <div class="table-header">
+            <h2>Student List</h2>
+            <button class="btn btn-primary" onclick="loadStudents()" style="padding: 8px 14px; font-size: 0.8rem;">🔄 Refresh</button>
+        </div>
 
-<input type="text" id="name" placeholder="Name">
-<input type="text" id="course" placeholder="Course">
-<button onclick="addStudent()">Add</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Course</th>
+                    <th>Age</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <tr><td colspan="7" class="loading">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-<hr>
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modalTitle">Add New Student</h2>
+        <input type="hidden" id="studentId">
 
-<h3>Student List</h3>
+        <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="sName" placeholder="e.g. Ahmed Khan">
+        </div>
 
-<table border="1">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Course</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="studentTable"></tbody>
-</table>
+        <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="sEmail" placeholder="ahmed@email.com">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Course *</label>
+                <select id="sCourse">
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Cyber Security">Cyber Security</option>
+                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                    <option value="Information Technology">Information Technology</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Age *</label>
+                <input type="number" id="sAge" placeholder="20" min="15" max="50">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Phone *</label>
+            <input type="text" id="sPhone" placeholder="03001234567">
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-success" onclick="saveStudent()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
+    const API = '/api/students';
+    let allStudents = [];
+    let userRole = 'USER';
 
-let userRole = "";
-
-fetch('/getRole')
-    .then(res => res.text())
-    .then(role => {
-        userRole = role;
-        document.getElementById("roleText").innerText = "Role: " + role;
-
-        loadStudents();
-    });
-
-function loadStudents() {
-    fetch('/api/students', {
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem("token")
-        }
-    })
-    .then(res => {
-        if(res.status === 401) {
-            alert("Unauthorized! Please login again");
-            window.location.href = "/login.html";
-            return;
-        }
-        return res.json();
-    })
-    .then(data => {
-
-        let table = document.getElementById("studentTable");
-        table.innerHTML = "";
-
-        data.forEach(s => {
-            let row = "<tr>" +
-                "<td>" + s.id + "</td>" +
-                "<td>" + s.name + "</td>" +
-                "<td>" + s.course + "</td>";
-
-            if(userRole === "ADMIN") {
-                row += "<td><button onclick='deleteStudent(" + s.id + ")'>Delete</button></td>";
-            } else {
-                row += "<td>No Access</td>";
-            }
-
-            row += "</tr>";
-            table.innerHTML += row;
-        });
-    });
-}
-
-
-function addStudent() {
-
-    if(userRole !== "ADMIN") {
-        alert("Only ADMIN can add student!");
-        return;
+    function getBadgeClass(course) {
+        if (course.includes('Computer')) return 'badge-cs';
+        if (course.includes('Software')) return 'badge-se';
+        if (course.includes('Data')) return 'badge-ds';
+        if (course.includes('Cyber')) return 'badge-cy';
+        return 'badge-default';
     }
 
-    let name = document.getElementById("name").value;
-    let course = document.getElementById("course").value;
-
-    fetch('/api/students', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem("token")
-        },
-        body: JSON.stringify({
-            name: name,
-            course: course
-        })
-    })
-    .then(res => res.json())
-    .then(() => {
-        alert("Student Added!");
-        loadStudents();
-    });
-}
-
-function deleteStudent(id) {
-    fetch('/api/students/' + id, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem("token")
+    async function loadRole() {
+        try {
+            const res = await fetch('/getRole');
+            if (res.status === 401 || res.status === 302) {
+                window.location.href = '/login.html';
+                return;
+            }
+            userRole = await res.text();
+            document.getElementById('roleBadge').textContent = '👤 ' + userRole;
+        } catch (e) {
+            window.location.href = '/login.html';
         }
-    })
-    .then(res => res.text())
-    .then(msg => {
-        alert(msg);
-        loadStudents();
-    });
-}
+    }
 
+    async function loadStudents() {
+        try {
+            const res = await fetch(API);
+            if (res.status === 401 || res.status === 302) {
+                window.location.href = '/login.html';
+                return;
+            }
+            if (!res.ok) throw new Error('Server error');
+            allStudents = await res.json();
+            renderTable(allStudents);
+            updateStats(allStudents);
+        } catch (err) {
+            document.getElementById('studentTableBody').innerHTML = `
+                <tr><td colspan="7" class="empty-state">
+                    <div class="icon">⚠️</div>
+                    <div>Backend connection failed!</div>
+                    <div style="font-size:0.8rem;margin-top:8px;">Run: <code>mvn spring-boot:run</code></div>
+                </td></tr>`;
+            showToast('Backend connection failed!', 'error');
+        }
+    }
+
+    function renderTable(students) {
+        const tbody = document.getElementById('studentTableBody');
+        if (students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><div class="icon">📭</div><div>No students found</div></td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = students.map(s => `
+            <tr>
+                <td><strong>#${s.id}</strong></td>
+                <td>${s.name}</td>
+                <td style="color:#94a3b8">${s.email}</td>
+                <td><span class="badge ${getBadgeClass(s.course)}">${s.course}</span></td>
+                <td>${s.age} yrs</td>
+                <td>${s.phone}</td>
+                <td class="actions">
+                    <button class="btn btn-warning" onclick="openEditModal(${s.id})">✏️ Edit</button>
+                    ${userRole === 'ADMIN'
+                        ? `<button class="btn btn-danger" onclick="deleteStudent(${s.id})">🗑️ Delete</button>`
+                        : `<span style="color:#64748b;font-size:0.8rem;">No Access</span>`
+                    }
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function updateStats(students) {
+        document.getElementById('totalStudents').textContent = students.length;
+        document.getElementById('totalCS').textContent = students.filter(s => s.course.includes('Computer')).length;
+        document.getElementById('totalSE').textContent = students.filter(s => s.course.includes('Software')).length;
+        document.getElementById('totalOther').textContent = students.filter(s => !s.course.includes('Computer') && !s.course.includes('Software')).length;
+    }
+
+    function searchStudents() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allStudents.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            s.email.toLowerCase().includes(q) ||
+            s.course.toLowerCase().includes(q)
+        );
+        renderTable(filtered);
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').textContent = 'Add New Student';
+        document.getElementById('studentId').value = '';
+        document.getElementById('sName').value = '';
+        document.getElementById('sEmail').value = '';
+        document.getElementById('sAge').value = '';
+        document.getElementById('sPhone').value = '';
+        document.getElementById('sCourse').value = 'Computer Science';
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function openEditModal(id) {
+        const student = allStudents.find(s => s.id === id);
+        if (!student) return;
+        document.getElementById('modalTitle').textContent = 'Update Student';
+        document.getElementById('studentId').value = student.id;
+        document.getElementById('sName').value = student.name;
+        document.getElementById('sEmail').value = student.email;
+        document.getElementById('sCourse').value = student.course;
+        document.getElementById('sAge').value = student.age;
+        document.getElementById('sPhone').value = student.phone;
+        document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    async function saveStudent() {
+        const id = document.getElementById('studentId').value;
+        const name = document.getElementById('sName').value.trim();
+        const email = document.getElementById('sEmail').value.trim();
+        const course = document.getElementById('sCourse').value;
+        const age = parseInt(document.getElementById('sAge').value);
+        const phone = document.getElementById('sPhone').value.trim();
+
+        if (!name || !email || !course || !age || !phone) {
+            showToast('Please fill all fields!', 'error');
+            return;
+        }
+
+        const data = { name, email, course, age, phone };
+
+        try {
+            const url = id ? `${API}/${id}` : API;
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.status === 401) { window.location.href = '/login.html'; return; }
+            if (!res.ok) throw new Error('Save failed');
+
+            closeModal();
+            await loadStudents();
+            showToast(id ? 'Student updated! ✓' : 'Student added! ✓');
+        } catch (err) {
+            showToast('Error saving student. Try again.', 'error');
+        }
+    }
+
+    async function deleteStudent(id) {
+        const student = allStudents.find(s => s.id === id);
+        if (!confirm(`Delete "${student.name}"? Are you sure?`)) return;
+
+        try {
+            // ✅ FIXED: No Authorization header — Spring Security session handles it
+            const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+            if (res.status === 403) { showToast('Access Denied! Only ADMIN can delete.', 'error'); return; }
+            if (!res.ok) throw new Error();
+            await loadStudents();
+            showToast('Student deleted!');
+        } catch {
+            showToast('Could not delete student.', 'error');
+        }
+    }
+
+    function showToast(msg, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = `toast ${type === 'error' ? 'error' : ''} show`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    document.getElementById('modalOverlay').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeModal();
+    });
+
+    loadRole().then(() => loadStudents());
 </script>
 
 </body>
