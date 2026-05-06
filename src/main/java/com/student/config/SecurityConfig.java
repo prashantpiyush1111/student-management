@@ -17,7 +17,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+        .csrf(csrf -> csrf
+        	    .ignoringRequestMatchers("/api/**") 
+        	)
             .authorizeHttpRequests(auth -> auth
                
                 .requestMatchers("/login.html", "/login", "/css/**", "/js/**").permitAll()
@@ -36,6 +38,10 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login.html")
                 .permitAll()
+                )
+            .sessionManagement(session -> session
+            	    .maximumSessions(1)
+            	    .maxSessionsPreventsLogin(false)
             );
         return http.build();
     }
@@ -48,11 +54,19 @@ public class SecurityConfig {
   
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(encoder.encode("admin123"))
-                .roles("ADMIN")
-                .build();
+    	UserDetails admin = User.builder()
+    		    .username(
+    		        System.getenv("ADMIN_USERNAME") != null
+    		        ? System.getenv("ADMIN_USERNAME")
+    		        : "localadmin"                 
+    		    )
+    		    .password(encoder.encode(
+    		        System.getenv("ADMIN_PASSWORD") != null
+    		        ? System.getenv("ADMIN_PASSWORD")
+    		        : "localpass123"              
+    		    ))
+    		    .roles("ADMIN")
+    		    .build();
         return new InMemoryUserDetailsManager(admin);
     }
 }
