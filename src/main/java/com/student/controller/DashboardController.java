@@ -8,6 +8,16 @@ import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class DashboardController {
+	
+    @GetMapping("/")
+    public String root() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() ||
+            auth.getPrincipal().equals("anonymousUser")) {
+            return "redirect:/login.html";
+        }
+        return "redirect:/dashboard";
+    }
 
     @GetMapping("/dashboard")
     public String dashboard() {
