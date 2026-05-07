@@ -19,12 +19,16 @@ public class SecurityConfig {
         http
         .csrf(csrf -> csrf
         	    .ignoringRequestMatchers("/api/**") 
+        	    .ignoringRequestMatchers("/login")
         	)
             .authorizeHttpRequests(auth -> auth
                
                 .requestMatchers("/login.html", "/login", "/css/**", "/js/**").permitAll()
                 
                 .requestMatchers("/api/students/**").authenticated()
+                .requestMatchers("/dashboard.html").authenticated()
+                .requestMatchers("/dashboard/**").authenticated() 
+                .requestMatchers("/").authenticated() 
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
