@@ -1,6 +1,10 @@
 package com.student.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,22 +16,28 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Student {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false)
-    private String name;
+	@NotBlank(message = "Name required")
+	@Column(nullable = false)
+	private String name;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+	@Email(message = "Valid email required")
+	@Column(nullable = false, unique = true)
+	private String email;
 
-    @Column(nullable = false)
-    private String course;
+	@NotBlank(message = "Course required")
+	@Column(nullable = false)
+	private String course;
 
-    @Column(nullable = false)
-    private int age;
+	@Min(value = 15, message = "Age minimum 15")
+	@Max(value = 50, message = "Age maximum 50")
+	@Column(nullable = false)
+	private int age;
 
-    @Column(nullable = false)
-    private String phone;
+	@NotBlank(message = "Phone required")
+	@Column(nullable = false)
+	private String phone;
 }
