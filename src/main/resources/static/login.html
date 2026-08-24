@@ -178,7 +178,7 @@
         Wrong username or password. Try again.
     </div>
 
-    <form method="post" action="/login">
+    <form id="loginForm" method="post" action="/login">
 
         <div class="form-group">
             <label>Username</label>
@@ -204,6 +204,51 @@
 </div>
 
 <script>
+    async function getCsrfToken() {
+        const response = await fetch('/csrf', {
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            throw new Error('Unable to initialize security token.');
+        }
+
+        const data = await response.json();
+        return data.token;
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        const button = form.querySelector('.btn-login');
+
+        button.disabled = true;
+        button.textContent = 'Logging in...';
+
+        try {
+            const token = await getCsrfToken();
+
+            let csrfInput = form.querySelector('input[name="_csrf"]');
+
+            if (!csrfInput) {
+                csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                form.appendChild(csrfInput);
+            }
+
+            csrfInput.value = token;
+
+            // Let the browser handle Spring Security's redirect response.
+            form.submit();
+        } catch (error) {
+            button.disabled = false;
+            button.textContent = 'Login';
+            document.getElementById('errorMsg').classList.add('show');
+        }
+    });
+
     if (window.location.search.includes('error=true')) {
         document.getElementById('errorMsg').classList.add('show');
     }

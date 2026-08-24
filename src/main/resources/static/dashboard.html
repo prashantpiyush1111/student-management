@@ -260,7 +260,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:16px;">
         <span class="role-badge" id="roleBadge">Loading...</span>
-        <a href="/logout" class="btn btn-danger" style="text-decoration:none; padding: 8px 16px;">🚪 Logout</a>
+        <button type="button" class="btn btn-danger" onclick="logout()" style="padding: 8px 16px;">🚪 Logout</button>
     </div>
 </header>
 
@@ -287,7 +287,7 @@
 
     <div class="search-bar">
         <input type="text" id="searchInput" placeholder="Search by name, email, course..." oninput="searchStudents()">
-        <button class="btn btn-success" onclick="openAddModal()">+ New Student</button>
+        <button id="addStudentButton" class="btn btn-success" onclick="openAddModal()">+ New Student</button>
     </div>
 
     <div class="table-wrapper">
@@ -368,94 +368,171 @@
     let allStudents = [];
     let userRole = 'USER';
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    async function getCsrfToken() {
+        const response = await fetch('/csrf', {
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            throw new Error('Unable to initialize security token.');
+        }
+
+        const data = await response.json();
+        return data.token;
+    }
+
     function getBadgeClass(course) {
-        if (course.includes('Computer')) return 'badge-cs';
-        if (course.includes('Software')) return 'badge-se';
-        if (course.includes('Data')) return 'badge-ds';
-        if (course.includes('Cyber')) return 'badge-cy';
+        const value = String(course || '');
+
+        if (value.includes('Computer')) return 'badge-cs';
+        if (value.includes('Software')) return 'badge-se';
+        if (value.includes('Data')) return 'badge-ds';
+        if (value.includes('Cyber')) return 'badge-cy';
+
         return 'badge-default';
     }
 
     async function loadRole() {
         try {
-            const res = await fetch('/getRole');
-            if (res.status === 401 || res.status === 302) {
+            const res = await fetch('/getRole', {
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 401 || res.redirected) {
                 window.location.href = '/login.html';
                 return;
             }
-            userRole = await res.text();
+
+            userRole = (await res.text()).trim().toUpperCase();
+
             document.getElementById('roleBadge').textContent = '👤 ' + userRole;
-        } catch (e) {
+
+            const addButton = document.getElementById('addStudentButton');
+            if (addButton) {
+                addButton.style.display = userRole === 'ADMIN' ? 'block' : 'none';
+            }
+        } catch (error) {
             window.location.href = '/login.html';
         }
     }
 
     async function loadStudents() {
         try {
-            const res = await fetch(API);
-            if (res.status === 401 || res.status === 302) {
+            const res = await fetch(API, {
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 401 || res.redirected) {
                 window.location.href = '/login.html';
                 return;
             }
-            if (!res.ok) throw new Error('Server error');
+
+            if (!res.ok) {
+                throw new Error('Server error');
+            }
+
             allStudents = await res.json();
             renderTable(allStudents);
             updateStats(allStudents);
-        } catch (err) {
+        } catch (error) {
             document.getElementById('studentTableBody').innerHTML = `
-                <tr><td colspan="7" class="empty-state">
-                    <div class="icon">⚠️</div>
-                    <div>Backend connection failed!</div>
-                    <div style="font-size:0.8rem;margin-top:8px;">Run: <code>mvn spring-boot:run</code></div>
-                </td></tr>`;
-            showToast('Backend connection failed!', 'error');
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <div>Unable to load student data.</div>
+                    </td>
+                </tr>`;
+
+            showToast('Unable to load student data.', 'error');
         }
     }
 
     function renderTable(students) {
         const tbody = document.getElementById('studentTableBody');
+
         if (students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><div class="icon">📭</div><div>No students found</div></td></tr>`;
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <div class="icon">📭</div>
+                        <div>No students found</div>
+                    </td>
+                </tr>`;
             return;
         }
 
-        tbody.innerHTML = students.map(s => `
-            <tr>
-                <td><strong>#${s.id}</strong></td>
-                <td>${s.name}</td>
-                <td style="color:#94a3b8">${s.email}</td>
-                <td><span class="badge ${getBadgeClass(s.course)}">${s.course}</span></td>
-                <td>${s.age} yrs</td>
-                <td>${s.phone}</td>
-                <td class="actions">
-                    <button class="btn btn-warning" onclick="openEditModal(${s.id})">✏️ Edit</button>
-                    ${userRole === 'ADMIN'
-                        ? `<button class="btn btn-danger" onclick="deleteStudent(${s.id})">🗑️ Delete</button>`
-                        : `<span style="color:#64748b;font-size:0.8rem;">No Access</span>`
-                    }
-                </td>
-            </tr>
-        `).join('');
+        tbody.innerHTML = students.map(student => {
+            const id = Number(student.id);
+
+            const actions = userRole === 'ADMIN'
+                ? `
+                    <button class="btn btn-warning" onclick="openEditModal(${id})">
+                        ✏️ Edit
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteStudent(${id})">
+                        🗑️ Delete
+                    </button>`
+                : `<span style="color:#64748b;font-size:0.8rem;">View Only</span>`;
+
+            return `
+                <tr>
+                    <td><strong>#${id}</strong></td>
+                    <td>${escapeHtml(student.name)}</td>
+                    <td style="color:#94a3b8">${escapeHtml(student.email)}</td>
+                    <td>
+                        <span class="badge ${getBadgeClass(student.course)}">
+                            ${escapeHtml(student.course)}
+                        </span>
+                    </td>
+                    <td>${escapeHtml(student.age)} yrs</td>
+                    <td>${escapeHtml(student.phone)}</td>
+                    <td class="actions">${actions}</td>
+                </tr>`;
+        }).join('');
     }
 
     function updateStats(students) {
         document.getElementById('totalStudents').textContent = students.length;
-        document.getElementById('totalCS').textContent = students.filter(s => s.course.includes('Computer')).length;
-        document.getElementById('totalSE').textContent = students.filter(s => s.course.includes('Software')).length;
-        document.getElementById('totalOther').textContent = students.filter(s => !s.course.includes('Computer') && !s.course.includes('Software')).length;
+        document.getElementById('totalCS').textContent =
+            students.filter(s => String(s.course).includes('Computer')).length;
+        document.getElementById('totalSE').textContent =
+            students.filter(s => String(s.course).includes('Software')).length;
+        document.getElementById('totalOther').textContent =
+            students.filter(s =>
+                !String(s.course).includes('Computer') &&
+                !String(s.course).includes('Software')
+            ).length;
     }
 
     function searchStudents() {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allStudents.filter(s =>
-            s.name.toLowerCase().includes(q) ||
-            s.email.toLowerCase().includes(q) ||
-            s.course.toLowerCase().includes(q)
+        const query = document.getElementById('searchInput').value
+            .trim()
+            .toLowerCase();
+
+        const filtered = allStudents.filter(student =>
+            String(student.name).toLowerCase().includes(query) ||
+            String(student.email).toLowerCase().includes(query) ||
+            String(student.course).toLowerCase().includes(query)
         );
+
         renderTable(filtered);
     }
 
     function openAddModal() {
+        if (userRole !== 'ADMIN') {
+            showToast('Only ADMIN can add students.', 'error');
+            return;
+        }
+
         document.getElementById('modalTitle').textContent = 'Add New Student';
         document.getElementById('studentId').value = '';
         document.getElementById('sName').value = '';
@@ -467,8 +544,17 @@
     }
 
     function openEditModal(id) {
+        if (userRole !== 'ADMIN') {
+            showToast('Only ADMIN can edit students.', 'error');
+            return;
+        }
+
         const student = allStudents.find(s => s.id === id);
-        if (!student) return;
+
+        if (!student) {
+            return;
+        }
+
         document.getElementById('modalTitle').textContent = 'Update Student';
         document.getElementById('studentId').value = student.id;
         document.getElementById('sName').value = student.name;
@@ -484,70 +570,145 @@
     }
 
     async function saveStudent() {
+        if (userRole !== 'ADMIN') {
+            showToast('Only ADMIN can modify students.', 'error');
+            return;
+        }
+
         const id = document.getElementById('studentId').value;
         const name = document.getElementById('sName').value.trim();
         const email = document.getElementById('sEmail').value.trim();
         const course = document.getElementById('sCourse').value;
-        const age = parseInt(document.getElementById('sAge').value);
+        const age = Number.parseInt(document.getElementById('sAge').value, 10);
         const phone = document.getElementById('sPhone').value.trim();
 
-        if (!name || !email || !course || !age || !phone) {
-            showToast('Please fill all fields!', 'error');
+        if (!name || !email || !course || !Number.isInteger(age) || !phone) {
+            showToast('Please fill all fields correctly.', 'error');
             return;
         }
 
         const data = { name, email, course, age, phone };
 
         try {
+            const token = await getCsrfToken();
             const url = id ? `${API}/${id}` : API;
             const method = id ? 'PUT' : 'POST';
 
             const res = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-XSRF-TOKEN': token
+                },
                 body: JSON.stringify(data)
             });
 
-            if (res.status === 401) { window.location.href = '/login.html'; return; }
-            if (!res.ok) throw new Error('Save failed');
+            if (res.status === 401) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            if (res.status === 403) {
+                showToast('Access denied. ADMIN required.', 'error');
+                return;
+            }
+
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({}));
+                throw new Error(error.error || 'Save failed');
+            }
 
             closeModal();
             await loadStudents();
             showToast(id ? 'Student updated! ✓' : 'Student added! ✓');
-        } catch (err) {
-            showToast('Error saving student. Try again.', 'error');
+        } catch (error) {
+            showToast(error.message || 'Error saving student.', 'error');
         }
     }
 
     async function deleteStudent(id) {
+        if (userRole !== 'ADMIN') {
+            showToast('Only ADMIN can delete students.', 'error');
+            return;
+        }
+
         const student = allStudents.find(s => s.id === id);
-        if (!confirm(`Delete "${student.name}"? Are you sure?`)) return;
+
+        if (!student || !confirm(`Delete "${student.name}"? Are you sure?`)) {
+            return;
+        }
 
         try {
-            // ✅ FIXED: No Authorization header — Spring Security session handles it
-            const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
-            if (res.status === 403) { showToast('Access Denied! Only ADMIN can delete.', 'error'); return; }
-            if (!res.ok) throw new Error();
+            const token = await getCsrfToken();
+
+            const res = await fetch(`${API}/${id}`, {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: {
+                    'X-XSRF-TOKEN': token
+                }
+            });
+
+            if (res.status === 401) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            if (res.status === 403) {
+                showToast('Access denied. ADMIN required.', 'error');
+                return;
+            }
+
+            if (!res.ok) {
+                throw new Error('Delete failed');
+            }
+
             await loadStudents();
             showToast('Student deleted!');
-        } catch {
+        } catch (error) {
             showToast('Could not delete student.', 'error');
         }
     }
 
-    function showToast(msg, type = 'success') {
+    async function logout() {
+        try {
+            const token = await getCsrfToken();
+
+            await fetch('/logout', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-XSRF-TOKEN': token
+                }
+            });
+        } finally {
+            window.location.href = '/login.html';
+        }
+    }
+
+    function showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.className = `toast ${type === 'error' ? 'error' : ''} show`;
+        toast.textContent = message;
+        toast.className =
+            `toast ${type === 'error' ? 'error' : ''} show`;
+
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-    document.getElementById('modalOverlay').addEventListener('click', e => {
-        if (e.target === e.currentTarget) closeModal();
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
     });
 
-    loadRole().then(() => loadStudents());
+    document.getElementById('modalOverlay').addEventListener('click', event => {
+        if (event.target === event.currentTarget) {
+            closeModal();
+        }
+    });
+
+    loadRole().then(loadStudents);
 </script>
 
 </body>
