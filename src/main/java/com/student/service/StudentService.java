@@ -1,8 +1,8 @@
 package com.student.service;
 
+import com.student.exception.StudentNotFoundException;
 import com.student.model.Student;
 import com.student.repository.StudentRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,46 +11,51 @@ import java.util.Optional;
 @Service
 public class StudentService {
 
-	@Autowired
-	private StudentRepository studentRepository;
+    private final StudentRepository studentRepository;
 
-	public List<Student> getAllStudents() {
-		return studentRepository.findAll();
-	}
+    public StudentService(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
+    }
 
-	public Optional<Student> getStudentById(Long id) {
-		return studentRepository.findById(id);
-	}
+    public List<Student> getAllStudents() {
+        return studentRepository.findAll();
+    }
 
-	public Student addStudent(Student student) {
-		return studentRepository.save(student);
-	}
+    public Optional<Student> getStudentById(Long id) {
+        return studentRepository.findById(id);
+    }
 
-	public Student updateStudent(Long id, Student updatedStudent) {
-		Student existing = studentRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Student nahi mila ID: " + id));
+    public Student addStudent(Student student) {
+        // Never allow a client to choose or overwrite a database ID.
+        student.setId(null);
+        return studentRepository.save(student);
+    }
 
-		existing.setName(updatedStudent.getName());
-		existing.setEmail(updatedStudent.getEmail());
-		existing.setCourse(updatedStudent.getCourse());
-		existing.setAge(updatedStudent.getAge());
-		existing.setPhone(updatedStudent.getPhone());
+    public Student updateStudent(Long id, Student updatedStudent) {
+        Student existing = studentRepository.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException(id));
 
-		return studentRepository.save(existing);
-	}
+        existing.setName(updatedStudent.getName());
+        existing.setEmail(updatedStudent.getEmail());
+        existing.setCourse(updatedStudent.getCourse());
+        existing.setAge(updatedStudent.getAge());
+        existing.setPhone(updatedStudent.getPhone());
 
-	public void deleteStudent(Long id) {
-		if (!studentRepository.existsById(id)) {
-			throw new RuntimeException("Student not found with ID: " + id);
-		}
-		studentRepository.deleteById(id);
-	}
+        return studentRepository.save(existing);
+    }
 
-	public List<Student> getStudentsByCourse(String course) {
-		return studentRepository.findByCourse(course);
-	}
+    public void deleteStudent(Long id) {
+        if (!studentRepository.existsById(id)) {
+            throw new StudentNotFoundException(id);
+        }
+        studentRepository.deleteById(id);
+    }
 
-	public List<Student> searchStudentsByName(String name) {
-		return studentRepository.findByNameContainingIgnoreCase(name);
-	}
+    public List<Student> getStudentsByCourse(String course) {
+        return studentRepository.findByCourse(course);
+    }
+
+    public List<Student> searchStudentsByName(String name) {
+        return studentRepository.findByNameContainingIgnoreCase(name);
+    }
 }
