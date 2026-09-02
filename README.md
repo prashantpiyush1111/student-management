@@ -1,64 +1,129 @@
 # 🎓 Student Management System
-> Java Spring Boot Backend + HTML Frontend | MySQL Database | Spring Security
 
----
+> A secure Java Spring Boot application for managing student records with authentication, role-based access, validation, search, and a lightweight web dashboard.
 
-## 📁 Project Structure
+## 📌 Overview
 
+The **Student Management System** is a backend-focused web application built with **Java, Spring Boot, Spring Security, and MySQL**. It provides authenticated operations for managing student records through REST APIs and a simple HTML-based interface.
+
+The project demonstrates practical Spring Boot fundamentals including layered application design, JPA persistence, security configuration, validation, and environment-based configuration.
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🔐 Authentication | Login/logout with Spring Security |
+| 👥 Authorization | Role-based access with ADMIN-only deletion |
+| 🎓 Student Management | Add, edit, search, view, and delete students |
+| 🔎 Search & Filters | Search by name/email and filter by course |
+| 📊 Dashboard | Student statistics and overview |
+| ✅ Validation | Input validation for student operations |
+| 🗄️ Persistence | MySQL database with Spring Data JPA |
+| 🔒 Security | BCrypt password encoding, CSRF protection, session controls |
+| ⚙️ Configuration | Credentials and deployment settings via environment variables |
+
+## 🏗️ Architecture
+
+```text
+HTML Frontend
+      │
+      │ HTTP / REST
+      ▼
+┌─────────────────────┐
+│ Spring Boot         │
+│ Controller Layer    │
+└──────────┬──────────┘
+           ▼
+┌─────────────────────┐
+│ Service Layer       │
+│ Business Logic      │
+└──────────┬──────────┘
+           ▼
+┌─────────────────────┐
+│ Repository Layer    │
+│ Spring Data JPA     │
+└──────────┬──────────┘
+           ▼
+      MySQL Database
 ```
-student-management/
-├── pom.xml                                    ← Maven dependencies
-├── README.md                                  ← This file
-└── src/main/
-    ├── java/com/student/
-    │   ├── StudentManagementApplication.java  ← Main class
-    │   ├── DataInitializer.java               ← Sample data auto-load
-    │   ├── config/
-    │   │   └── SecurityConfig.java            ← Spring Security config
-    │   ├── model/
-    │   │   ├── Student.java                   ← Student entity
-    │   │   └── Admin.java                     ← Admin entity
-    │   ├── repository/
-    │   │   ├── StudentRepository.java         ← Database queries
-    │   │   └── AdminRepository.java
-    │   ├── service/
-    │   │   └── StudentService.java            ← Business logic
-    │   └── controller/
-    │       ├── StudentController.java         ← REST API endpoints
-    │       └── DashboardController.java       ← Page routing
-    └── resources/
-        ├── application.properties             ← Local config (not in git)
-        ├── application-prod.properties        ← Production config
-        └── static/
-            ├── login.html                     ← Login page
-            ├── dashboard.html                 ← Main dashboard
-            └── index.html                     ← Root redirect
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Java 17 | Application language |
+| Spring Boot 3.2.0 | Application framework |
+| Spring Security 6.x | Authentication and authorization |
+| Spring Data JPA 3.x | Persistence and database access |
+| MySQL 8.x | Relational database |
+| Lombok | Boilerplate reduction |
+| Maven 3.x | Build and dependency management |
+| HTML/CSS/JavaScript | Frontend interface |
+
+## 📂 Project Structure
+
+```text
+src/main/
+├── java/com/student/
+│   ├── StudentManagementApplication.java
+│   ├── DataInitializer.java
+│   ├── config/
+│   │   └── SecurityConfig.java
+│   ├── model/
+│   │   ├── Student.java
+│   │   └── Admin.java
+│   ├── repository/
+│   │   ├── StudentRepository.java
+│   │   └── AdminRepository.java
+│   ├── service/
+│   │   └── StudentService.java
+│   └── controller/
+│       ├── StudentController.java
+│       └── DashboardController.java
+└── resources/
+    ├── application.properties
+    ├── application-prod.properties
+    └── static/
+        ├── login.html
+        ├── dashboard.html
+        └── index.html
 ```
 
----
+## 🌐 REST API
 
-## ⚙️ Local Setup
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/students` | List students |
+| GET | `/api/students/{id}` | Get a student |
+| POST | `/api/students` | Add a student |
+| PUT | `/api/students/{id}` | Update a student |
+| DELETE | `/api/students/{id}` | Delete a student (ADMIN) |
+| GET | `/api/students/search?name=...` | Search by name |
+| GET | `/api/students/course/{course}` | Filter by course |
 
-### Step 1 — Start MySQL
+Protected operations require authentication according to the application's security configuration.
+
+## 🚀 Local Setup
+
+### Prerequisites
+
+- Java 17
+- Maven 3.x
+- MySQL 8.x
+
+### 1. Create Database
+
 ```sql
 CREATE DATABASE IF NOT EXISTS studentdb;
 ```
 
-### Step 2 — Create application.properties
-Create file at `src/main/resources/application.properties`:
-```properties
-server.port=8082
-spring.datasource.url=jdbc:mysql://localhost:3306/studentdb
-spring.datasource.username=root
-spring.datasource.password=your_password
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.open-in-view=false
-```
+### 2. Configure Environment
 
-### Step 3 — Create .env File
-Create `.env` file in project root:
-```
+Keep credentials in environment variables rather than committing secrets.
+
+Example values:
+
+```text
 ADMIN_USERNAME=your_username
 ADMIN_PASSWORD=your_strong_password
 DB_URL=jdbc:mysql://localhost:3306/studentdb
@@ -67,105 +132,55 @@ DB_PASSWORD=your_password
 PORT=8082
 ```
 
-### Step 4 — Run the Server
+### 3. Run the Application
+
 ```bash
 mvn spring-boot:run
 ```
 
-### Step 5 — Open in Browser
-```
+### 4. Open the Application
+
+```text
 http://localhost:8082/
 ```
 
----
-
-## 🔐 Login
-
-```
-URL:      http://localhost:8082/login.html
-Username: value of ADMIN_USERNAME (from .env)
-Password: value of ADMIN_PASSWORD (from .env)
-```
-
-> ⚠️ Never push .env or application.properties to GitHub!
-
----
-
-## 🌐 API Endpoints
-
-| Method | URL | Description | Auth |
-|--------|-----|-------------|------|
-| GET | `/api/students` | Get all students | ✅ Required |
-| GET | `/api/students/{id}` | Get student by ID | ✅ Required |
-| POST | `/api/students` | Add new student | ✅ Required |
-| PUT | `/api/students/{id}` | Update student | ✅ Required |
-| DELETE | `/api/students/{id}` | Delete student | 🔒 ADMIN only |
-| GET | `/api/students/search?name=Ahmed` | Search by name | ✅ Required |
-| GET | `/api/students/course/Computer Science` | Filter by course | ✅ Required |
-
----
-
-## ✅ Features
-
-| Feature | Status |
-|---------|--------|
-| Login / Logout | ✅ |
-| Spring Security | ✅ |
-| Role-based Access (ADMIN only delete) | ✅ |
-| CSRF Protection | ✅ |
-| Session Management | ✅ |
-| Student Add / Edit / Delete | ✅ |
-| Search by Name / Email / Course | ✅ |
-| Stats Dashboard | ✅ |
-| Input Validation | ✅ |
-| MySQL Database | ✅ |
-| BCrypt Password Encoding | ✅ |
-| Environment Variable Credentials | ✅ |
-
----
-
-## 🚀 Production Deployment (Render)
-
-### Environment Variables — Add in Render Dashboard:
-```
-ADMIN_USERNAME = your_username
-ADMIN_PASSWORD = your_strong_password
-DB_URL         = jdbc:mysql://db-host:3306/studentdb
-DB_USERNAME    = db_username
-DB_PASSWORD    = db_password
-PORT           = 8082
-```
-
-### Build & Start Commands:
-```
-Build Command:  mvn clean package -DskipTests
-Start Command:  java -jar target/*.jar
-```
-
----
-
 ## 🔒 Security
 
-```
-✅ application.properties — added to .gitignore
-✅ .env — added to .gitignore
-✅ Passwords are BCrypt encoded
-✅ CSRF protection enabled
-✅ Session limit: 1 active session per user
-✅ Error details hidden in production
-✅ Credentials loaded from environment variables
-```
+The project includes:
 
----
+- Spring Security authentication
+- BCrypt password encoding
+- Role-based authorization
+- CSRF protection
+- Session management
+- Environment-based credentials
+- Production-oriented error handling
 
-## 👨‍💻 Tech Stack
+> Never commit `.env`, production credentials, API keys, or local database passwords.
 
-| Technology | Version |
-|------------|---------|
-| Java | 17 |
-| Spring Boot | 3.2.0 |
-| Spring Security | 6.x |
-| Spring Data JPA | 3.x |
-| MySQL | 8.x |
-| Lombok | Latest |
-| Maven | 3.x |
+## 🌐 Deployment
+
+The project includes configuration guidance for deployment on **Render**, including environment variables and Maven build/start commands.
+
+## 📚 Learning Outcomes
+
+This project demonstrates practical experience with:
+
+- Spring Boot REST API development
+- Spring Security configuration
+- JPA/Hibernate persistence
+- MySQL database integration
+- Role-based authorization
+- Validation and error handling
+- Environment-based configuration
+
+## 👨‍💻 Author
+
+**Prashant Maurya**  
+Java Full Stack Developer
+
+GitHub: [@prashantpiyush1111](https://github.com/prashantpiyush1111)
+
+## 📄 License
+
+See the repository license for current usage terms.
